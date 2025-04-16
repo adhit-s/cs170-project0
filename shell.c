@@ -23,11 +23,9 @@
  * For example,  for "ls > tmp",  return the position of ">"
  * For example,  for "ls | wc ",  return the position of "|"
  */
-char* parse(char * lineptr, char **args)
-{
+char* parse(char * lineptr, char **args) {
   //while lineIn isn't done. 
-  while (*lineptr != '\0') 
-  {
+  while (*lineptr != '\0') {
     // If it's whitespace, tab or newline,
     // turn it into \0 and keep moving till we find the next token.
     // This makes sure each arg has a \0 immidiately after it
@@ -63,7 +61,6 @@ char* parse(char * lineptr, char **args)
   }
 
   *args = NULL; 
-
   return lineptr;
 }
 
@@ -74,15 +71,13 @@ char* parse(char * lineptr, char **args)
  * inPipe -- the input stream file descriptor.  For example,  wc < temp 
  * outPipe --the output stream file descriptor.  For example, ls > temp 
  */
-void fchild(char **args,int inPipe, int outPipe)
-{
-  printf("Fork: '%s' In: %d Out: %d\n", args[0], inPipe, outPipe);
+void fchild(char **args,int inPipe, int outPipe) {
+  // printf("Fork: '%s' In: %d Out: %d\n", args[0], inPipe, outPipe);
   pid_t pid;
   pid = fork();
-  
-  if (pid == 0)/*Child  process*/
-  {
-    int execReturn=-1;
+   
+  if (pid == 0) { /* child process */
+    int execReturn = -1;
 
     /*Call dup2 to setup redirection, and then call excevep*/
 
@@ -99,10 +94,9 @@ void fchild(char **args,int inPipe, int outPipe)
         exit(1);
       }
     }
-    execReturn = execvp(args[0], args);
 
-    if (execReturn < 0) 
-    { 
+    execReturn = execvp(args[0], args);
+    if (execReturn < 0) { 
       perror(args[0]);
       exit(1);
     }
@@ -111,17 +105,16 @@ void fchild(char **args,int inPipe, int outPipe)
 
   }
 
-  if (pid < 0)
-  {
+  if (pid < 0) {
     printf("ERROR: Failed to fork child process.\n");
     exit(1); 
   }
   
   if(inPipe != 0)
-    close(inPipe); /*clean up, release file control resource*/
+    close(inPipe); /* clean up, release file control resource */
     
   if(outPipe != 1)
-    close(outPipe); /*clean up, release file control  resource*/
+    close(outPipe); /* clean up, release file control resource */
 }
 
 
@@ -136,88 +129,67 @@ void fchild(char **args,int inPipe, int outPipe)
  * out is the output file descriptor, initially it is 1, gradually it may be changed as we parse subcommmands.
  * The inPipe default value  is 0 and  outPipe default value is 1.
  */
-void runcmd(char * linePtr, int length, int inPipe, int outPipe)
-{
-  char * args[length];
-  char * nextChar = parse(linePtr, args);
+void runcmd(char *linePtr, int length, int inPipe, int outPipe) {
+  char *args[MAX_TOKEN_COUNT];
+  char *nextChar = parse(linePtr, args);
   int remainingLength = length - (nextChar - linePtr);
-  printf("Cmd: '%s' Curr: '%c' Next: '%c' Remaining: %d In: %d Out: %d\n", args[0], *linePtr, *nextChar, remainingLength, inPipe, outPipe);
 
-  if (args[0] != NULL)
-  {
-    /*Exit if seeing "exit" command*/
-    /*Your solution*/
-    if (strcmp(args[0], "exit") == 0)
-      exit(0);
-            
-    // Handle input redirection.
-    if (*nextChar == '<' && inPipe == 0) {
-      char *infileArgs[MAX_TOKEN_COUNT];
-      // Skip the '<' operator.
-      nextChar = parse(nextChar + 1, infileArgs);
-      int newIn = open(infileArgs[0], O_RDONLY);
-      if (newIn < 0) {
-          perror(infileArgs[0]);
+  if (args[0] == NULL)
+    return;
+
+  if (strcmp(args[0], "exit") == 0)
+    exit(0);
+
+  // printf("Cmd: '%s' Curr: '%c' Next: '%c' Remaining: %d In: %d Out: %d\n",
+  //         args[0], *linePtr, *nextChar, remainingLength, inPipe, outPipe);
+
+  int finalIn = inPipe;
+  int finalOut = outPipe;
+
+  while (*nextChar == '<' || *nextChar == '>') {
+    if (*nextChar == '<') {
+      char *inArgs[MAX_TOKEN_COUNT];
+      nextChar = parse(nextChar + 1, inArgs);
+      finalIn = open(inArgs[0], O_RDONLY);
+      if (finalIn < 0) {
+          perror(inArgs[0]);
           return;
       }
-      printf("Reading: '%s' Next: '%c' In: %d\n", infileArgs[0], *nextChar, newIn);
-      fchild(args, newIn, outPipe);
-      // Reset inPipe to standard input for subsequent commands.
-      runcmd(nextChar, remainingLength, 0, outPipe);
-      return;
-  }
-  
-    // Handle output redirection.
-    if (*nextChar == '>') {
-      char *outfileArgs[MAX_TOKEN_COUNT];
-      // Skip the '>' operator.
-      nextChar = parse(nextChar + 1, outfileArgs);
-      int newOut = open(outfileArgs[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-      if (newOut < 0) {
-          perror(outfileArgs[0]);
+      // printf("Reading: '%s' Next: '%c' FD: %d\n", inArgs[0], *nextChar, finalIn);
+    } else if (*nextChar == '>') {
+      char *outArgs[MAX_TOKEN_COUNT];
+      nextChar = parse(nextChar + 1, outArgs);
+      finalOut = open(outArgs[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (finalOut < 0) {
+          perror(outArgs[0]);
           return;
       }
-      printf("Writing: '%s' Next: '%c' Out: %d\n", outfileArgs[0], *nextChar, newOut);
-      fchild(args, inPipe, newOut);
-      // Reset outPipe to standard output for subsequent commands.
-      runcmd(nextChar, remainingLength, inPipe, 1);
-      return;
+      // printf("Writing: '%s' Next: '%c' FD: %d\n", outArgs[0], *nextChar, finalOut);
     }
-  
-  // Handle pipe.
+    remainingLength = length - (nextChar - linePtr);
+  }
+
   if (*nextChar == '|') {
-      int fd[2];
-      if (pipe(fd) < 0) {
-          perror("pipe");
-          exit(1);
-      }
-      printf("Piping: Write: %d --> Read: %d\n", fd[1], fd[0]);
-      // Execute the current command with its output going to fd[1].
-      fchild(args, inPipe, fd[1]);
-      // Process the remainder of the command using the read end of the pipe.
-      runcmd(nextChar + 1, remainingLength, fd[0], outPipe);
-      return;
-  }
-
-    if (*nextChar == '\0') 
-    { /*There is noting special after this subcommand, so we just execute in a regular way*/
-      fchild(args,inPipe,outPipe);
-      return;
+    int fd[2];
+    if (pipe(fd) < 0) {
+        perror("ERROR: Pipe");
+        exit(1);
     }
-
-    //else: some problem, so throw a fit.
+    // printf("Piping: Write FD %d, Read FD %d\n", fd[1], fd[0]);
+    fchild(args, finalIn, fd[1]);
+    runcmd(nextChar + 1, remainingLength, fd[0], outPipe);
+  } else if (*nextChar == '\0') {
+    fchild(args, finalIn, finalOut);
+  } else {
     fprintf(stderr, "ERROR: Invalid input: %c\n", *nextChar);
   }
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   /*Your solution*/
   char lineIn[MAX_LINE_LENGTH];
 
-  while(1) 
-  {
+  while(1) {
     if (fgets(lineIn,MAX_LINE_LENGTH,stdin) == NULL)
       break;
               
@@ -226,15 +198,14 @@ int main(int argc, char *argv[])
       len++;
       
     /* remove the \n that fgets adds to the end */
-    if (len != 0 && lineIn[len-1] == '\n')
-    {
+    if (len != 0 && lineIn[len-1] == '\n') {
       lineIn[len-1] = '\0';
       len--;
     }
         
     //Run this string of subcommands with 0 as default input stream
     //and 1 as default output stream
-    printf("LINE: '%s'\n", lineIn);
+    // printf("LINE: '%s'\n", lineIn);
     runcmd(lineIn, len,0,1);
   
     /*Wait for the child completes */

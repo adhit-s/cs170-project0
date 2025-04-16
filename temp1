@@ -1,16 +1,17 @@
-.
-..
-shell.c
-Makefile
-simple_shell.c
-testfile
-testfile1
-testfile2
-testfile3
-testfile4
-gradescope_test
-test2_expected
-temp
-temp4
-shell.o
-shell
+drwxr-xr-x 2 adhit ugrad  4096 Apr 15 20:58 gradescope_test
+-rw-r--r-- 1 adhit ugrad   111 Apr 15 20:58 testfile3
+-rw-r--r-- 1 adhit ugrad   127 Apr 15 20:58 testfile2
+-rw-r--r-- 1 adhit ugrad    12 Apr 15 21:29 temp2
+-rw-r--r-- 1 adhit ugrad  1433 Apr 15 20:58 simple_shell.c
+-rw-r--r-- 1 adhit ugrad   150 Apr 15 21:36 temp
+-rw-r--r-- 1 adhit ugrad   153 Apr 15 21:29 temp3
+-rw-r--r-- 1 adhit ugrad   154 Apr 15 20:58 testfile4
+-rw-r--r-- 1 adhit ugrad   214 Apr 15 21:29 temp4
+-rw-r--r-- 1 adhit ugrad    27 Apr 15 20:58 testfile
+-rw-r--r-- 1 adhit ugrad  4704 Apr 15 21:36 shell.o
+-rw-r--r-- 1 adhit ugrad    49 Apr 15 20:58 testfile1
+-rw-r--r-- 1 adhit ugrad   587 Apr 15 20:58 Makefile
+-rw-r--r-- 1 adhit ugrad  6361 Apr 15 21:35 shell.c
+-rw-r--r-- 1 adhit ugrad     7 Apr 15 21:26 temp1
+-rwxr-xr-x 1 adhit ugrad 17480 Apr 15 21:36 shell
+total 88
