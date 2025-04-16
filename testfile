@@ -1,0 +1,1 @@
+cat < temp1 | sort > temp2

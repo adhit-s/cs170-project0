@@ -1,0 +1,15 @@
+.
+..
+shell.c
+Makefile
+simple_shell.c
+testfile
+testfile1
+testfile2
+testfile3
+testfile4
+gradescope_test
+shell.o
+shell
+test2_expected
+temp
